@@ -17,18 +17,25 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-// Package main is the entrance of project
-package main
+package xtime
 
 import (
-	"fmt"
+	"testing"
+	"time"
 
-	"github.com/lsytj0413/ena/pkg/utils/version"
-	"github.com/lsytj0413/ena/xtime"
+	"github.com/agiledragon/gomonkey/v2"
+	gomega "github.com/onsi/gomega"
 )
 
-func main() {
-	fmt.Printf("%s\n", version.Get().Pretty())
+func TestSystemTimerMills(t *testing.T) {
+	t.Run("normal test", func(t *testing.T) {
+		g := gomega.NewWithT(t)
+		guard := gomonkey.ApplyFunc(time.Now, func() time.Time {
+			return time.Unix(10, 100100000)
+		})
+		defer guard.Reset()
 
-	fmt.Printf("time: %v\n", xtime.CurrentTimeMills())
+		tt := NewSystemTimer()
+		g.Expect(tt.CurrentTimeMills()).To(gomega.Equal(uint64(10100)))
+	})
 }

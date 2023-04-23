@@ -17,18 +17,20 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-// Package main is the entrance of project
-package main
+package xtime
 
 import (
-	"fmt"
-
-	"github.com/lsytj0413/ena/pkg/utils/version"
-	"github.com/lsytj0413/ena/xtime"
+	"time"
 )
 
-func main() {
-	fmt.Printf("%s\n", version.Get().Pretty())
+type systemTimer struct {
+}
 
-	fmt.Printf("time: %v\n", xtime.CurrentTimeMills())
+func (*systemTimer) CurrentTimeMills() uint64 {
+	return uint64(time.Now().UnixNano()) / UnixTimeMilliOffset
+}
+
+// NewSystemTimer will return the implement of system time
+func NewSystemTimer() Timer {
+	return &systemTimer{}
 }

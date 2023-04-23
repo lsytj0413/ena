@@ -17,18 +17,55 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-// Package main is the entrance of project
-package main
+package xtime
 
 import (
-	"fmt"
+	"testing"
+	"time"
 
-	"github.com/lsytj0413/ena/pkg/utils/version"
-	"github.com/lsytj0413/ena/xtime"
+	gomega "github.com/onsi/gomega"
 )
 
-func main() {
-	fmt.Printf("%s\n", version.Get().Pretty())
+type testTimer struct {
+	ms uint64
+}
 
-	fmt.Printf("time: %v\n", xtime.CurrentTimeMills())
+func (t *testTimer) CurrentTimeMills() uint64 {
+	return t.ms
+}
+
+func TestDefault(t *testing.T) {
+	t.Run("normal test", func(t *testing.T) {
+		g := gomega.NewWithT(t)
+		tt := &testTimer{
+			ms: 100,
+		}
+		SetDefault(tt)
+
+		g.Expect(Default()).To(gomega.Equal(tt))
+	})
+}
+
+func TestCurrentTimeMills(t *testing.T) {
+	t.Run("normal test", func(t *testing.T) {
+		g := gomega.NewWithT(t)
+		tt := &testTimer{
+			ms: 100,
+		}
+		SetDefault(tt)
+
+		g.Expect(CurrentTimeMills()).To(gomega.Equal(tt.ms))
+	})
+}
+
+func TestCurrentTime(t *testing.T) {
+	t.Run("normal test", func(t *testing.T) {
+		g := gomega.NewWithT(t)
+		tt := &testTimer{
+			ms: 10100,
+		}
+		SetDefault(tt)
+
+		g.Expect(CurrentTime()).To(gomega.Equal(time.Unix(10, 100000000)))
+	})
 }
