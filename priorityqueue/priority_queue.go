@@ -11,7 +11,7 @@ import (
 // Element for priority queue element
 type Element[T any] struct {
 	// Value for element
-	Value interface{}
+	Value T
 
 	// priority of the element, make it private to avoid change from element
 	priority int64
