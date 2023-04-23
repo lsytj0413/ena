@@ -1,4 +1,4 @@
-<!-- <p align="center"><img src="" alt="" height="100px"></p> -->
+<p align="center"><img src="doc/ena-logo.png" alt="ena" height="100px"></p>
 
 <div align="center">
   <a href="https://codecov.io/gh/lsytj0413/ena" > 
@@ -12,4 +12,6 @@
   </a>
 </div>
 
-# ena
+# ena #
+
+Ena is An open-source golang library. And ena is Greek, which means *ONE* in english.
