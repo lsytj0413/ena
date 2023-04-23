@@ -24,10 +24,10 @@
 #
 
 # This repo's root import path (under GOPATH).
-ROOT := github.com/lsytj0413/golang-project-template
+ROOT := github.com/lsytj0413/ena
 
 # Module name.
-NAME := golang-project-template
+NAME := ena
 
 # Container image prefix and suffix added to targets.
 # The final built images are:
