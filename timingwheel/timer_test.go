@@ -17,30 +17,63 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package ena
+package timingwheel
 
 import (
-	"context"
+	"testing"
+
+	. "github.com/onsi/gomega"
 
 	"github.com/lsytj0413/ena/xerrors"
 )
 
-// ReceiveChannel consume obj from channel, it will:
-// 1. return err if ctx is Done
-// 2. return err is obj is error
-// 3. return err if obj is not error or type T
-func ReceiveChannel[T any](ctx context.Context, ch <-chan interface{}) (v T, err error) {
-	select {
-	case <-ctx.Done():
-		return v, ctx.Err()
-	case vv := <-ch:
-		switch vvo := vv.(type) {
-		case error:
-			return v, vvo
-		case T:
-			return vvo, nil
+type testStopWheel struct {
+	stopFuncFn func(*timerTask) (bool, error)
+}
+
+func (t *testStopWheel) StopFunc(tt *timerTask) (bool, error) {
+	return t.stopFuncFn(tt)
+}
+
+func TestTimerTaskStop(t *testing.T) {
+	t.Run("stopped", func(t *testing.T) {
+		g := NewWithT(t)
+		tt := &timerTask{}
+		tt.stopped = 1
+
+		v, err := tt.Stop()
+		g.Expect(err).ToNot(HaveOccurred())
+		g.Expect(v).To(BeTrue())
+	})
+
+	t.Run("stop_failed", func(t *testing.T) {
+		g := NewWithT(t)
+		tt := &timerTask{
+			w: &testStopWheel{
+				stopFuncFn: func(tt *timerTask) (bool, error) {
+					return false, xerrors.ErrContinue
+				},
+			},
 		}
 
-		return v, xerrors.Errorf("unknown type %T, expect %T or error", vv, v)
-	}
+		v, err := tt.Stop()
+		g.Expect(err).To(HaveOccurred())
+		g.Expect(err.Error()).To(MatchRegexp(`Continue`))
+		g.Expect(v).To(BeFalse())
+	})
+
+	t.Run("ok", func(t *testing.T) {
+		g := NewWithT(t)
+		tt := &timerTask{
+			w: &testStopWheel{
+				stopFuncFn: func(tt *timerTask) (bool, error) {
+					return true, nil
+				},
+			},
+		}
+
+		v, err := tt.Stop()
+		g.Expect(err).ToNot(HaveOccurred())
+		g.Expect(v).To(BeTrue())
+	})
 }

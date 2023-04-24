@@ -17,30 +17,58 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package ena
+package timingwheel
 
 import (
-	"context"
+	"testing"
 
-	"github.com/lsytj0413/ena/xerrors"
+	. "github.com/onsi/gomega"
 )
 
-// ReceiveChannel consume obj from channel, it will:
-// 1. return err if ctx is Done
-// 2. return err is obj is error
-// 3. return err if obj is not error or type T
-func ReceiveChannel[T any](ctx context.Context, ch <-chan interface{}) (v T, err error) {
-	select {
-	case <-ctx.Done():
-		return v, ctx.Err()
-	case vv := <-ch:
-		switch vvo := vv.(type) {
-		case error:
-			return v, vvo
-		case T:
-			return vvo, nil
-		}
+func TestTruncate(t *testing.T) {
+	type testCase struct {
+		desp   string
+		x      int64
+		m      int64
+		expect int64
+	}
+	testCases := []testCase{
+		{
+			desp:   "negative m",
+			x:      1,
+			m:      -1,
+			expect: 1,
+		},
+		{
+			desp:   "zero m",
+			x:      100,
+			m:      0,
+			expect: 100,
+		},
+		{
+			desp:   "divide exactly",
+			x:      100,
+			m:      2,
+			expect: 100,
+		},
+		{
+			desp:   "divide unexactly 01",
+			x:      100,
+			m:      3,
+			expect: 99,
+		},
+		{
+			desp:   "divide unexactly 02",
+			x:      10,
+			m:      3,
+			expect: 9,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.desp, func(t *testing.T) {
+			g := NewWithT(t)
 
-		return v, xerrors.Errorf("unknown type %T, expect %T or error", vv, v)
+			g.Expect(truncate(tc.x, tc.m)).To(Equal(tc.expect))
+		})
 	}
 }

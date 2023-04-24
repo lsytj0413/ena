@@ -17,30 +17,35 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package ena
+package timingwheel
 
-import (
-	"context"
+import "fmt"
 
-	"github.com/lsytj0413/ena/xerrors"
+var (
+	// ErrInvalidTickValue is representation error of invalid tick value
+	ErrInvalidTickValue = fmt.Errorf("tick must be greater than or equal to 1ms")
+
+	// ErrInvalidWheelSize is representation error of invalid wheel size value
+	ErrInvalidWheelSize = fmt.Errorf("wheel size must greater than zero")
+
+	// ErrInvalidTickFuncDurationValue is representation error of invalid tickfunc duration
+	ErrInvalidTickFuncDurationValue = fmt.Errorf("tickfunc duration must greater than or equal to timingwheel tick")
 )
 
-// ReceiveChannel consume obj from channel, it will:
-// 1. return err if ctx is Done
-// 2. return err is obj is error
-// 3. return err if obj is not error or type T
-func ReceiveChannel[T any](ctx context.Context, ch <-chan interface{}) (v T, err error) {
-	select {
-	case <-ctx.Done():
-		return v, ctx.Err()
-	case vv := <-ch:
-		switch vvo := vv.(type) {
-		case error:
-			return v, vvo
-		case T:
-			return vvo, nil
-		}
+// eventType is the representation of event, such as AddNew, RePost
+type eventType = string
 
-		return v, xerrors.Errorf("unknown type %T, expect %T or error", vv, v)
-	}
-}
+// eventAddNew is the identify when timertask is add from AfterFunc
+var eventAddNew eventType = "AddNew"
+
+// eventDelete is the identify when timertask.Stop is called
+var eventDelete eventType = "Delete"
+
+// timerTaskType is the representation of timertask
+type timerTaskType = string
+
+// taskAfter is the identify when the timertask is disposable
+var taskAfter timerTaskType = "After"
+
+// taskTick is the identify when the timertask is repetitious
+var taskTick timerTaskType = "Tick"
