@@ -31,7 +31,7 @@ var (
 	ErrNotFound = errors.New("ObjectNotFound")
 
 	// ErrDuplicate defines the object is duplicate
-	ErrDuplicate = errors.New("DuplidateObject")
+	ErrDuplicate = errors.New("DuplicateObject")
 
 	// ErrContinue defines the err can continue
 	ErrContinue = errors.New("Continue")
