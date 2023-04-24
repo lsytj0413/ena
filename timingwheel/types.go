@@ -17,30 +17,37 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package ena
+package timingwheel
 
 import (
-	"context"
-
-	"github.com/lsytj0413/ena/xerrors"
+	"time"
 )
 
-// ReceiveChannel consume obj from channel, it will:
-// 1. return err if ctx is Done
-// 2. return err is obj is error
-// 3. return err if obj is not error or type T
-func ReceiveChannel[T any](ctx context.Context, ch <-chan interface{}) (v T, err error) {
-	select {
-	case <-ctx.Done():
-		return v, ctx.Err()
-	case vv := <-ch:
-		switch vvo := vv.(type) {
-		case error:
-			return v, vvo
-		case T:
-			return vvo, nil
-		}
+// Handler for function execution
+type Handler func(time.Time)
 
-		return v, xerrors.Errorf("unknown type %T, expect %T or error", vv, v)
-	}
+// TimingWheel is an interface for implementation.
+type TimingWheel interface {
+	// Start starts the current timing wheel
+	Start()
+
+	// Stop stops the current timing wheel. If there is any timer's task being running, the stop
+	// will not wait for complete.
+	// TODO(lsytj0413): should pass ctx from Start?
+	Stop()
+
+	// AfterFunc will call the Handler in its own goroutine after the duration elapse.
+	// It return an Timer that can use to cancel the Handler.
+	AfterFunc(d time.Duration, f Handler) (TimerTask, error)
+
+	// TickFunc will call the Handler in its own goroutine after the duration elapse tick.
+	// It reutrn an Timer that can use to cancel the Handler.
+	TickFunc(d time.Duration, f Handler) (TimerTask, error)
+}
+
+// TimerTask is an interface for task implementation.
+type TimerTask interface {
+	// Stop the timertask, the Handler will not be execute after this.
+	// NOTE: there is not promise the pre Hander call will been executed before stop.
+	Stop() (bool, error)
 }

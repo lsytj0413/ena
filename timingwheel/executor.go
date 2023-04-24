@@ -17,30 +17,31 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package ena
+package timingwheel
 
 import (
-	"context"
-
-	"github.com/lsytj0413/ena/xerrors"
+	"time"
 )
 
-// ReceiveChannel consume obj from channel, it will:
-// 1. return err if ctx is Done
-// 2. return err is obj is error
-// 3. return err if obj is not error or type T
-func ReceiveChannel[T any](ctx context.Context, ch <-chan interface{}) (v T, err error) {
-	select {
-	case <-ctx.Done():
-		return v, ctx.Err()
-	case vv := <-ch:
-		switch vvo := vv.(type) {
-		case error:
-			return v, vvo
-		case T:
-			return vvo, nil
-		}
+// executor is an redefine for task execute
+type executor = func(Handler, time.Time)
 
-		return v, xerrors.Errorf("unknown type %T, expect %T or error", vv, v)
-	}
+// taskExecutor is the default implement to run Handler, will execute the Handler in other goroutine
+func taskExecutor(f Handler, ct time.Time) {
+	go f(ct)
+}
+
+var (
+	// defaultExecutor is the executor for task, it will execute the task in it's own goroutine
+	defaultExecutor executor
+)
+
+// nolint
+// blockExecutor will run task in current goruntine, for test usage
+func blockExecutor(f Handler, ct time.Time) {
+	f(ct)
+}
+
+func init() {
+	defaultExecutor = taskExecutor
 }

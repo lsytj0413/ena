@@ -17,30 +17,63 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package ena
+package timingwheel
 
 import (
-	"context"
-
-	"github.com/lsytj0413/ena/xerrors"
+	"container/list"
+	"sync/atomic"
 )
 
-// ReceiveChannel consume obj from channel, it will:
-// 1. return err if ctx is Done
-// 2. return err is obj is error
-// 3. return err if obj is not error or type T
-func ReceiveChannel[T any](ctx context.Context, ch <-chan interface{}) (v T, err error) {
-	select {
-	case <-ctx.Done():
-		return v, ctx.Err()
-	case vv := <-ch:
-		switch vvo := vv.(type) {
-		case error:
-			return v, vvo
-		case T:
-			return vvo, nil
-		}
+// buchet is list of timer
+type bucket struct {
+	// the container list of timer
+	timers *list.List
 
-		return v, xerrors.Errorf("unknown type %T, expect %T or error", vv, v)
+	// expiration is the expire of bucket
+	expiration int64
+}
+
+func newBucket() *bucket {
+	return &bucket{
+		timers:     list.New(),
+		expiration: -1,
 	}
+}
+
+func (b *bucket) Expiration() int64 {
+	return atomic.LoadInt64(&b.expiration)
+}
+
+func (b *bucket) SetExpiration(v int64) bool {
+	return atomic.SwapInt64(&b.expiration, v) != v
+}
+
+func (b *bucket) Add(t *timerTask) {
+	e := b.timers.PushBack(t)
+	t.b, t.e = b, e
+}
+
+func (b *bucket) remove(t *timerTask) bool {
+	if t.b != b {
+		return false
+	}
+
+	b.timers.Remove(t.e)
+	t.b, t.e = nil, nil
+	return true
+}
+
+// Flush will called by bucket expire exceed, and in the reinsert function,
+// the TimerTask will reinsert into the timingwheel.
+func (b *bucket) Flush(reinsert func(*timerTask)) {
+	e := b.timers.Front()
+	for e != nil {
+		n := e.Next()
+		t := e.Value.(*timerTask)
+		b.remove(t)
+		reinsert(t)
+		e = n
+	}
+
+	b.SetExpiration(-1)
 }

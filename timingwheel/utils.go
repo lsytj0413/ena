@@ -17,30 +17,25 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package ena
+package timingwheel
 
 import (
-	"context"
-
-	"github.com/lsytj0413/ena/xerrors"
+	"time"
 )
 
-// ReceiveChannel consume obj from channel, it will:
-// 1. return err if ctx is Done
-// 2. return err is obj is error
-// 3. return err if obj is not error or type T
-func ReceiveChannel[T any](ctx context.Context, ch <-chan interface{}) (v T, err error) {
-	select {
-	case <-ctx.Done():
-		return v, ctx.Err()
-	case vv := <-ch:
-		switch vvo := vv.(type) {
-		case error:
-			return v, vvo
-		case T:
-			return vvo, nil
-		}
+// timeToMs returns the represents t in milliseconds
+func timeToMs(t time.Time) int64 {
+	return int64(time.Duration(t.UnixNano()) / time.Millisecond)
+}
 
-		return v, xerrors.Errorf("unknown type %T, expect %T or error", vv, v)
+// truncate returns the result of rounding x toward zero to a multiple of m.
+// if m <= 0, return x unchanged.
+// EX: if x is 10, and the m is 3, it will return 9. because 9 is the most nearest
+// value lower than x and it is multiple of 3.
+func truncate(x int64, m int64) int64 {
+	if m <= 0 {
+		return x
 	}
+
+	return x - x%m
 }

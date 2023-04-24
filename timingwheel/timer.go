@@ -17,29 +17,59 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package ena
+package timingwheel
 
 import (
+	"container/list"
 	"sync/atomic"
-	"testing"
-
-	. "github.com/onsi/gomega"
+	"time"
 )
 
-func TestWaitGroupWrapperWrap(t *testing.T) {
-	g := NewWithT(t)
-	var wg WaitGroupWrapper
-	var count uint32
+// stopWheel is wrap for timingWheel.StopFunc, testable
+type stopWheel interface {
+	StopFunc(t *timerTask) (bool, error)
+}
 
-	wg.Wrap(func() {
-		atomic.AddUint32(&count, 1)
-	}, func() {
-		atomic.AddUint32(&count, 2)
-	})
-	wg.Wrap(func() {
-		atomic.AddUint32(&count, 3)
-	})
+// timerTask represent single task. When expires, the given
+// task will been executed.
+type timerTask struct {
+	// d is the duration of timertask
+	d time.Duration
+	// expiration of the task
+	expiration int64
+	// the timer type, when the type is Tick, the timer will reinsert into the
+	// wheel after fired.
+	t timerTaskType
 
-	wg.Wait()
-	g.Expect(atomic.LoadUint32(&count)).To(Equal(uint32(6)))
+	// the id of timertask, unique
+	id uint64
+
+	// task handler
+	f Handler
+
+	// sign of whether the timertask has stopped,
+	// 1: stopped
+	// 0: non stopped
+	stopped uint32
+
+	// the bucket pointer that holds the TimerTask list
+	b *bucket
+	w stopWheel
+
+	e *list.Element
+}
+
+// Stop the timer task from fire, return true if the timer is stopped success,
+// or false if the timer has already expired or been stopped.
+func (t *timerTask) Stop() (bool, error) {
+	if atomic.LoadUint32(&t.stopped) == 1 {
+		return true, nil
+	}
+
+	stopped, err := t.w.StopFunc(t)
+	if err != nil {
+		return false, err
+	}
+
+	return stopped || atomic.LoadUint32(&t.stopped) == 1, nil
 }
