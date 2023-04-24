@@ -28,3 +28,7 @@ comment:
       default:
         target: 80%
         threshold: 5%
+ignore:
+  - "delayqueue/mocks/*"
+  - "priorityqueue/mocks/*"
+  - "timingwheel/mocks/*"
