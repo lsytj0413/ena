@@ -20,36 +20,15 @@
 package timingwheel
 
 import (
-	"context"
 	"fmt"
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	. "github.com/onsi/gomega"
+
+	delayqueuemocks "github.com/lsytj0413/ena/delayqueue/mocks"
 )
-
-type mockDelayQueue struct {
-	chanFn  func() <-chan *bucket
-	sizeFn  func() int
-	offerFn func(*bucket, int64)
-	pollFn  func(context.Context)
-}
-
-func (m *mockDelayQueue) Chan() <-chan *bucket {
-	return m.chanFn()
-}
-
-func (m *mockDelayQueue) Size() int {
-	return m.sizeFn()
-}
-
-func (m *mockDelayQueue) Offer(element *bucket, expiration int64) {
-	m.offerFn(element, expiration)
-}
-
-func (m *mockDelayQueue) Poll(ctx context.Context) {
-	m.pollFn(ctx)
-}
 
 func TestNewWheel(t *testing.T) {
 	g := NewWithT(t)
@@ -141,7 +120,9 @@ func TestWheelAdd(t *testing.T) {
 		}
 
 		w := newWheel(3, 20, 4)
-		dq := &mockDelayQueue{}
+		mockCtrl := gomock.NewController(t)
+		dq := delayqueuemocks.NewMockDelayQueue[*bucket](mockCtrl)
+
 		for _, tc := range testCases {
 			t.Run(tc.desp, func(t *testing.T) {
 				g := NewWithT(t)
@@ -149,20 +130,15 @@ func TestWheelAdd(t *testing.T) {
 				if tc.currentTime > 0 {
 					w.advanceClock(tc.currentTime)
 				}
-
-				count := 0
-				dq.offerFn = func(b *bucket, i int64) {
-					count++
+				if tc.isOfferCalled {
+					dq.EXPECT().Offer(gomock.Any(), gomock.Any()).Times(1)
+				} else {
+					dq.EXPECT().Offer(gomock.Any(), gomock.Any()).Times(0)
 				}
+
 				g.Expect(w.add(tc.t, dq)).To(BeTrue())
 				g.Expect(w.buckets[tc.bucketIndex]).To(Equal(tc.t.b))
 				g.Expect(w.buckets[tc.bucketIndex].Expiration(), tc.bucketExpiration)
-
-				if tc.isOfferCalled {
-					g.Expect(count).To(Equal(1))
-				} else {
-					g.Expect(count).To(Equal(0))
-				}
 			})
 		}
 	})
@@ -170,7 +146,8 @@ func TestWheelAdd(t *testing.T) {
 	t.Run("ok_overflow_wheel", func(t *testing.T) {
 		g := NewWithT(t)
 		w := newWheel(3, 20, 4)
-		dq := &mockDelayQueue{}
+		mockCtrl := gomock.NewController(t)
+		dq := delayqueuemocks.NewMockDelayQueue[*bucket](mockCtrl)
 
 		g.Expect(w.overflowWheel).To(BeNil())
 
@@ -183,7 +160,8 @@ func TestWheelAdd(t *testing.T) {
 		//   c. wheelsize(20): uplayer wheelsize
 		//   d. interval(1200): tick*wheelsize
 		// 4. overflow layer: range(0-1200)
-		dq.offerFn = func(b *bucket, i int64) {}
+		dq.EXPECT().Offer(gomock.Any(), gomock.Any()).Times(1)
+
 		g.Expect(w.add(&timerTask{
 			expiration: 66,
 		}, dq)).To(BeTrue())
@@ -198,12 +176,9 @@ func TestWheelAddOrRun(t *testing.T) {
 		g := NewWithT(t)
 		w := newWheel(3, 20, 4)
 
-		count := 0
-		dq := &mockDelayQueue{
-			offerFn: func(b *bucket, i int64) {
-				count++
-			},
-		}
+		mockCtrl := gomock.NewController(t)
+		dq := delayqueuemocks.NewMockDelayQueue[*bucket](mockCtrl)
+		dq.EXPECT().Offer(gomock.Any(), gomock.Any()).Times(0)
 
 		v := 0
 		tt := &timerTask{
@@ -216,7 +191,6 @@ func TestWheelAddOrRun(t *testing.T) {
 		w.addOrRun(tt, dq)
 		g.Expect(v).To(Equal(1))
 		g.Expect(tt.b).To(BeNil())
-		g.Expect(count).To(Equal(0))
 	})
 
 	t.Run("run immediate nonstoped tick task", func(t *testing.T) {
@@ -233,17 +207,14 @@ func TestWheelAddOrRun(t *testing.T) {
 			},
 			t: taskTick,
 		}
-		count := 0
-		dq := &mockDelayQueue{
-			offerFn: func(b *bucket, i int64) {
-				count++
-			},
-		}
+
+		mockCtrl := gomock.NewController(t)
+		dq := delayqueuemocks.NewMockDelayQueue[*bucket](mockCtrl)
+		dq.EXPECT().Offer(gomock.Any(), gomock.Any()).Times(1)
 
 		w.addOrRun(tt, dq)
 		g.Expect(v).To(Equal(1))
 		g.Expect(tt.b).ToNot(BeNil())
-		g.Expect(count).To(Equal(1))
 	})
 
 	t.Run("run immediate stopped tick task", func(t *testing.T) {
@@ -260,17 +231,14 @@ func TestWheelAddOrRun(t *testing.T) {
 			},
 			t: taskTick,
 		}
-		count := 0
-		dq := &mockDelayQueue{
-			offerFn: func(b *bucket, i int64) {
-				count++
-			},
-		}
+
+		mockCtrl := gomock.NewController(t)
+		dq := delayqueuemocks.NewMockDelayQueue[*bucket](mockCtrl)
+		dq.EXPECT().Offer(gomock.Any(), gomock.Any()).Times(0)
 
 		w.addOrRun(tt, dq)
 		g.Expect(v).To(Equal(1))
 		g.Expect(tt.b).To(BeNil())
-		g.Expect(count).To(Equal(0))
 	})
 }
 
