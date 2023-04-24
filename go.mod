@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/agiledragon/gomonkey/v2 v2.9.0
+	github.com/golang/mock v1.6.0
 	github.com/onsi/gomega v1.27.5
 )
 
