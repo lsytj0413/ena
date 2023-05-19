@@ -17,27 +17,46 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package ena
+package conma
 
-// Option is an generic configuration helper
-type Option[T any] interface {
-	// Apply applies this configuration to the given option
-	Apply(*T)
-}
+import (
+	"testing"
 
-// FnOption is an generic function helper for Option
-type FnOption[T any] struct {
-	Fn func(*T)
-}
+	. "github.com/onsi/gomega"
+)
 
-// Apply will invoke fn on provide option
-func (o *FnOption[T]) Apply(opt *T) {
-	o.Fn(opt)
-}
+func TestOptionConfigReaderReadTo(t *testing.T) {
+	t.Run("normal test", func(t *testing.T) {
+		g := NewWithT(t)
 
-// NewFnOption will instant an Option with f
-func NewFnOption[T any](f func(*T)) Option[T] {
-	return &FnOption[T]{
-		Fn: f,
-	}
+		r := NewOptionConfigReader()
+		count := 0
+		vals := map[string]interface{}{}
+		s := &testConfigStore{
+			setFn: func(key string, val interface{}) error {
+				count++
+				vals[key] = val
+				return nil
+			},
+		}
+		argsFn = func() []string {
+			return []string{
+				"-",
+				"-1",
+				"k1=",
+				"k2=v2",
+				"k3=v3,v4",
+			}
+		}
+
+		err := r.ReadTo(s)
+		g.Expect(err).ToNot(HaveOccurred())
+		g.Expect(count).To(Equal(4))
+		g.Expect(vals).To(Equal(map[string]interface{}{
+			"1":  true,
+			"k1": "",
+			"k2": "v2",
+			"k3": []string{"v3", "v4"},
+		}))
+	})
 }

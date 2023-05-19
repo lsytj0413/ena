@@ -17,27 +17,46 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package ena
+package conma
 
-// Option is an generic configuration helper
-type Option[T any] interface {
-	// Apply applies this configuration to the given option
-	Apply(*T)
+import (
+	"reflect"
+	"strings"
+
+	"github.com/lsytj0413/ena"
+)
+
+// FieldDescriptor is the descriptor for conma struct field
+// The struct tag must format as:
+//  1. `conma:"name:=default"` for config field
+type FieldDescriptor struct {
+	FieldIndex int
+	FieldName  string
+	Typ        reflect.Type
+	Unexported bool
+
+	Name    string
+	Default *string
 }
 
-// FnOption is an generic function helper for Option
-type FnOption[T any] struct {
-	Fn func(*T)
-}
-
-// Apply will invoke fn on provide option
-func (o *FnOption[T]) Apply(opt *T) {
-	o.Fn(opt)
-}
-
-// NewFnOption will instant an Option with f
-func NewFnOption[T any](f func(*T)) Option[T] {
-	return &FnOption[T]{
-		Fn: f,
+// NewFieldDescriptor ...
+func NewFieldDescriptor(field reflect.StructField, idx int) (*FieldDescriptor, error) {
+	fd := &FieldDescriptor{
+		FieldIndex: idx,
+		FieldName:  field.Name,
+		Typ:        field.Type,
+		Unexported: !field.IsExported(),
 	}
+
+	tag, ok := field.Tag.Lookup("conma")
+	if !ok {
+		return nil, nil
+	}
+
+	vv := strings.SplitN(tag, ":=", 2)
+	fd.Name = vv[0]
+	if len(vv) > 1 {
+		fd.Default = ena.PointerTo(vv[1])
+	}
+	return fd, nil
 }

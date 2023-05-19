@@ -17,27 +17,52 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package ena
+package conma
 
-// Option is an generic configuration helper
-type Option[T any] interface {
-	// Apply applies this configuration to the given option
-	Apply(*T)
+import (
+	"os"
+
+	"gopkg.in/yaml.v3"
+)
+
+// fileConfigReader will read all configuration items
+// from file to config storage.
+type fileConfigReader struct {
+	files []string
 }
 
-// FnOption is an generic function helper for Option
-type FnOption[T any] struct {
-	Fn func(*T)
-}
+var (
+	// for unittest
+	readFileFn = os.ReadFile
+)
 
-// Apply will invoke fn on provide option
-func (o *FnOption[T]) Apply(opt *T) {
-	o.Fn(opt)
-}
-
-// NewFnOption will instant an Option with f
-func NewFnOption[T any](f func(*T)) Option[T] {
-	return &FnOption[T]{
-		Fn: f,
+// NewFileConfigReader will return an file reader
+func NewFileConfigReader(files ...string) ConfigReader {
+	return &fileConfigReader{
+		files: files,
 	}
+}
+
+func (r *fileConfigReader) ReadTo(store ConfigStorage) error {
+	for _, file := range r.files {
+		data, err := readFileFn(file)
+		if err != nil {
+			return err
+		}
+
+		var m map[string]interface{}
+		err = yaml.Unmarshal(data, &m)
+		if err != nil {
+			return err
+		}
+
+		for k, v := range m {
+			err = store.Set(k, v)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }

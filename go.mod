@@ -6,6 +6,7 @@ require (
 	github.com/agiledragon/gomonkey/v2 v2.9.0
 	github.com/golang/mock v1.6.0
 	github.com/onsi/gomega v1.27.5
+	golang.org/x/exp v0.0.0-20230515195305-f3d0a9c9a5cc
 )
 
 require (

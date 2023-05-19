@@ -17,27 +17,57 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package ena
+package conma
 
-// Option is an generic configuration helper
-type Option[T any] interface {
-	// Apply applies this configuration to the given option
-	Apply(*T)
+import (
+	"os"
+	"strings"
+)
+
+// envConfigReader will read all available and
+// related envs to config storage.
+type envConfigReader struct {
 }
 
-// FnOption is an generic function helper for Option
-type FnOption[T any] struct {
-	Fn func(*T)
+var (
+	// for unittest
+	environFn = os.Environ
+)
+
+// NewEnvConfigReader return an env reader
+func NewEnvConfigReader() ConfigReader {
+	return &envConfigReader{}
 }
 
-// Apply will invoke fn on provide option
-func (o *FnOption[T]) Apply(opt *T) {
-	o.Fn(opt)
-}
+// ReadTo will implement ConfigReader.ReadTo method, it will
+// 1. read all envs
+// 2. filter by user-defined machinism
+// 3. persistent env items to ConfigStore
+func (r *envConfigReader) ReadTo(store ConfigStorage) error {
+	envStrs := environFn()
+	for _, envStr := range envStrs {
+		kvArr := strings.SplitN(envStr, "=", 2)
+		if len(kvArr) != 2 {
+			continue
+		}
 
-// NewFnOption will instant an Option with f
-func NewFnOption[T any](f func(*T)) Option[T] {
-	return &FnOption[T]{
-		Fn: f,
+		key := func(key string) string {
+			return strings.ReplaceAll(strings.ToLower(key), "_", ".")
+		}(kvArr[0])
+
+		values := strings.Split(kvArr[1], ",")
+		if len(values) > 1 {
+			err := store.Set(key, values)
+			if err != nil {
+				return err
+			}
+		} else {
+			err := store.Set(key, kvArr[1])
+			if err != nil {
+				return err
+			}
+		}
 	}
+
+	return nil
 }
