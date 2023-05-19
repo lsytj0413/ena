@@ -17,27 +17,30 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package ena
+package conma
 
-// Option is an generic configuration helper
-type Option[T any] interface {
-	// Apply applies this configuration to the given option
-	Apply(*T)
-}
+import (
+	"testing"
 
-// FnOption is an generic function helper for Option
-type FnOption[T any] struct {
-	Fn func(*T)
-}
+	. "github.com/onsi/gomega"
+)
 
-// Apply will invoke fn on provide option
-func (o *FnOption[T]) Apply(opt *T) {
-	o.Fn(opt)
-}
+func TestAppliers(t *testing.T) {
+	g := NewWithT(t)
+	count := 3
 
-// NewFnOption will instant an Option with f
-func NewFnOption[T any](f func(*T)) Option[T] {
-	return &FnOption[T]{
-		Fn: f,
-	}
+	p := &appliers{}
+	p.Append(&fnApplier{
+		fn: func() {
+			count++
+		},
+	})
+	p.Append(&fnApplier{
+		fn: func() {
+			count *= 2
+		},
+	})
+
+	p.Apply()
+	g.Expect(count).To(Equal(8))
 }

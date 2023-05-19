@@ -17,27 +17,31 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package ena
+package conma
 
-// Option is an generic configuration helper
-type Option[T any] interface {
-	// Apply applies this configuration to the given option
-	Apply(*T)
+// Applier use to apply the configuration value to object
+type Applier interface {
+	Apply()
 }
 
-// FnOption is an generic function helper for Option
-type FnOption[T any] struct {
-	Fn func(*T)
+type fnApplier struct {
+	fn func()
 }
 
-// Apply will invoke fn on provide option
-func (o *FnOption[T]) Apply(opt *T) {
-	o.Fn(opt)
+func (f *fnApplier) Apply() {
+	f.fn()
 }
 
-// NewFnOption will instant an Option with f
-func NewFnOption[T any](f func(*T)) Option[T] {
-	return &FnOption[T]{
-		Fn: f,
+type appliers struct {
+	applies []Applier
+}
+
+func (p *appliers) Append(a Applier) {
+	p.applies = append(p.applies, a)
+}
+
+func (p *appliers) Apply() {
+	for _, a := range p.applies {
+		a.Apply()
 	}
 }

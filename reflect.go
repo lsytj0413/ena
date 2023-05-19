@@ -19,25 +19,38 @@
 
 package ena
 
-// Option is an generic configuration helper
-type Option[T any] interface {
-	// Apply applies this configuration to the given option
-	Apply(*T)
-}
+import (
+	"reflect"
 
-// FnOption is an generic function helper for Option
-type FnOption[T any] struct {
-	Fn func(*T)
-}
+	"github.com/lsytj0413/ena/xerrors"
+)
 
-// Apply will invoke fn on provide option
-func (o *FnOption[T]) Apply(opt *T) {
-	o.Fn(opt)
-}
-
-// NewFnOption will instant an Option with f
-func NewFnOption[T any](f func(*T)) Option[T] {
-	return &FnOption[T]{
-		Fn: f,
+// IndirectToValue returns the reflect.Value of v
+// If the interface is non reflect.Value, return the reflect.ValueOf(v)
+func IndirectToValue(v interface{}) reflect.Value {
+	e, ok := v.(reflect.Value)
+	if ok {
+		return e
 	}
+
+	return reflect.ValueOf(v)
+}
+
+// IndirectToSetableValue returns the setable reflect.Value of i
+func IndirectToSetableValue(i interface{}) (reflect.Value, error) {
+	v := IndirectToValue(i)
+	if v.Kind() == reflect.Ptr {
+		// If the value is pointer and CanSet & IsNil, it maybe the pointer-type field in struct,
+		// we must set it with the nil-non-pointer value.
+		if v.CanSet() && v.IsNil() {
+			v.Set(reflect.New(v.Type().Elem()))
+		}
+
+		v = v.Elem()
+	}
+
+	if !v.CanSet() {
+		return reflect.Value{}, xerrors.Errorf("The '%T' cannot been set, it must setable", i)
+	}
+	return v, nil
 }

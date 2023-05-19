@@ -17,19 +17,11 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-comment:
-  layout: "reach, diff, flags, files"
-  behavior: default
-  require_changes: false     # if true: only post the comment if coverage changes
-  require_base: false        # [true :: must have a base report to post]
-  require_head: true         # [true :: must have a head report to post]
-  status:
-    patch:
-      default:
-        target: 80%
-        threshold: 5%
-ignore:
-  - "delayqueue/mocks/*"
-  - "priorityqueue/mocks/*"
-  - "timingwheel/mocks/*"
-  - "conma/examples/*"
+k1: fv1
+k2: fv2
+k3: fv3
+p:
+  k1: pfv1
+  k2: pfv2
+  k3: pfv3
+  k4: pfv4
