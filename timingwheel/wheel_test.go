@@ -138,7 +138,7 @@ func TestWheelAdd(t *testing.T) {
 
 				g.Expect(w.add(tc.t, dq)).To(BeTrue())
 				g.Expect(w.buckets[tc.bucketIndex]).To(Equal(tc.t.b))
-				g.Expect(w.buckets[tc.bucketIndex].Expiration(), tc.bucketExpiration)
+				g.Expect(w.buckets[tc.bucketIndex].Expiration()).To(Equal(tc.bucketExpiration))
 			})
 		}
 	})
@@ -167,7 +167,7 @@ func TestWheelAdd(t *testing.T) {
 		}, dq)).To(BeTrue())
 		g.Expect(w.overflowWheel).ToNot(BeNil())
 		g.Expect(w.overflowWheel.buckets[1]).ToNot(BeNil())
-		g.Expect(w.overflowWheel.buckets[1].Expiration(), int64(60))
+		g.Expect(w.overflowWheel.buckets[1].Expiration()).To(Equal(int64(60)))
 	})
 }
 
