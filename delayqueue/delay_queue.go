@@ -87,7 +87,7 @@ func NewWithTimer[T any](size int, t Timer) DelayQueue[T] {
 		C:       make(chan T),
 		wakeupC: make(chan struct{}),
 		T:       t,
-		pq:      priorityqueue.NewPriorityQueue[T](1),
+		pq:      priorityqueue.NewPriorityQueue[T](size),
 		pollFn:  pollImpl[T],
 	}
 }

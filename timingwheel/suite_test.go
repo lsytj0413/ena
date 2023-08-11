@@ -27,7 +27,8 @@ import (
 func TestMain(m *testing.M) {
 	defaultExecutor = blockExecutor
 
-	os.Exit(m.Run())
-
+	code := m.Run()
 	defaultExecutor = taskExecutor
+
+	os.Exit(code)
 }

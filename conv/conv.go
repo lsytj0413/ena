@@ -30,7 +30,7 @@ import (
 )
 
 // ConvertToBool converts []string to bool. Only the first data is used.
-func ConvertToBool(ctx context.Context, data []string) (interface{}, error) {
+func ConvertToBool(_ context.Context, data []string) (interface{}, error) {
 	origin := data[0]
 	target, err := strconv.ParseBool(origin)
 	if err != nil {
@@ -40,7 +40,7 @@ func ConvertToBool(ctx context.Context, data []string) (interface{}, error) {
 }
 
 // ConvertToInt converts []string to int. Only the first data is used.
-func ConvertToInt(ctx context.Context, data []string) (interface{}, error) {
+func ConvertToInt(_ context.Context, data []string) (interface{}, error) {
 	origin := data[0]
 	target, err := strconv.ParseInt(origin, 10, 0)
 	if err != nil {
@@ -50,7 +50,7 @@ func ConvertToInt(ctx context.Context, data []string) (interface{}, error) {
 }
 
 // ConvertToInt8 converts []string to int8. Only the first data is used.
-func ConvertToInt8(ctx context.Context, data []string) (interface{}, error) {
+func ConvertToInt8(_ context.Context, data []string) (interface{}, error) {
 	origin := data[0]
 	target, err := strconv.ParseInt(origin, 10, 8)
 	if err != nil {
@@ -60,7 +60,7 @@ func ConvertToInt8(ctx context.Context, data []string) (interface{}, error) {
 }
 
 // ConvertToInt16 converts []string to int16. Only the first data is used.
-func ConvertToInt16(ctx context.Context, data []string) (interface{}, error) {
+func ConvertToInt16(_ context.Context, data []string) (interface{}, error) {
 	origin := data[0]
 	target, err := strconv.ParseInt(origin, 10, 16)
 	if err != nil {
@@ -70,7 +70,7 @@ func ConvertToInt16(ctx context.Context, data []string) (interface{}, error) {
 }
 
 // ConvertToInt32 converts []string to int32. Only the first data is used.
-func ConvertToInt32(ctx context.Context, data []string) (interface{}, error) {
+func ConvertToInt32(_ context.Context, data []string) (interface{}, error) {
 	origin := data[0]
 	target, err := strconv.ParseInt(origin, 10, 32)
 	if err != nil {
@@ -80,7 +80,7 @@ func ConvertToInt32(ctx context.Context, data []string) (interface{}, error) {
 }
 
 // ConvertToInt64 converts []string to int64. Only the first data is used.
-func ConvertToInt64(ctx context.Context, data []string) (interface{}, error) {
+func ConvertToInt64(_ context.Context, data []string) (interface{}, error) {
 	origin := data[0]
 	target, err := strconv.ParseInt(origin, 10, 64)
 	if err != nil {
@@ -90,7 +90,7 @@ func ConvertToInt64(ctx context.Context, data []string) (interface{}, error) {
 }
 
 // ConvertToUint converts []string to uint. Only the first data is used.
-func ConvertToUint(ctx context.Context, data []string) (interface{}, error) {
+func ConvertToUint(_ context.Context, data []string) (interface{}, error) {
 	origin := data[0]
 	target, err := strconv.ParseUint(origin, 10, 0)
 	if err != nil {
@@ -100,7 +100,7 @@ func ConvertToUint(ctx context.Context, data []string) (interface{}, error) {
 }
 
 // ConvertToUint8 converts []string to uint8. Only the first data is used.
-func ConvertToUint8(ctx context.Context, data []string) (interface{}, error) {
+func ConvertToUint8(_ context.Context, data []string) (interface{}, error) {
 	origin := data[0]
 	target, err := strconv.ParseUint(origin, 10, 8)
 	if err != nil {
@@ -110,7 +110,7 @@ func ConvertToUint8(ctx context.Context, data []string) (interface{}, error) {
 }
 
 // ConvertToUint16 converts []string to uint16. Only the first data is used.
-func ConvertToUint16(ctx context.Context, data []string) (interface{}, error) {
+func ConvertToUint16(_ context.Context, data []string) (interface{}, error) {
 	origin := data[0]
 	target, err := strconv.ParseUint(origin, 10, 16)
 	if err != nil {
@@ -120,7 +120,7 @@ func ConvertToUint16(ctx context.Context, data []string) (interface{}, error) {
 }
 
 // ConvertToUint32 converts []string to uint32. Only the first data is used.
-func ConvertToUint32(ctx context.Context, data []string) (interface{}, error) {
+func ConvertToUint32(_ context.Context, data []string) (interface{}, error) {
 	origin := data[0]
 	target, err := strconv.ParseUint(origin, 10, 32)
 	if err != nil {
@@ -130,7 +130,7 @@ func ConvertToUint32(ctx context.Context, data []string) (interface{}, error) {
 }
 
 // ConvertToUint64 converts []string to uint64. Only the first data is used.
-func ConvertToUint64(ctx context.Context, data []string) (interface{}, error) {
+func ConvertToUint64(_ context.Context, data []string) (interface{}, error) {
 	origin := data[0]
 	target, err := strconv.ParseUint(origin, 10, 64)
 	if err != nil {
@@ -140,7 +140,7 @@ func ConvertToUint64(ctx context.Context, data []string) (interface{}, error) {
 }
 
 // ConvertToFloat32 converts []string to float32. Only the first data is used.
-func ConvertToFloat32(ctx context.Context, data []string) (interface{}, error) {
+func ConvertToFloat32(_ context.Context, data []string) (interface{}, error) {
 	origin := data[0]
 	target, err := strconv.ParseFloat(origin, 32)
 	if err != nil {
@@ -150,7 +150,7 @@ func ConvertToFloat32(ctx context.Context, data []string) (interface{}, error) {
 }
 
 // ConvertToFloat64 converts []string to float64. Only the first data is used.
-func ConvertToFloat64(ctx context.Context, data []string) (interface{}, error) {
+func ConvertToFloat64(_ context.Context, data []string) (interface{}, error) {
 	origin := data[0]
 	target, err := strconv.ParseFloat(origin, 64)
 	if err != nil {
@@ -160,12 +160,12 @@ func ConvertToFloat64(ctx context.Context, data []string) (interface{}, error) {
 }
 
 // ConvertToString return the first element in []string.
-func ConvertToString(ctx context.Context, data []string) (interface{}, error) {
+func ConvertToString(_ context.Context, data []string) (interface{}, error) {
 	return data[0], nil
 }
 
 // ConvertToTimeDuration return the first element in []string as time.Duration
-func ConvertToTimeDuration(ctx context.Context, data []string) (interface{}, error) {
+func ConvertToTimeDuration(_ context.Context, data []string) (interface{}, error) {
 	return time.ParseDuration(data[0])
 }
 
