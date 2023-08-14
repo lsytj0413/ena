@@ -21,10 +21,10 @@ package xslog
 
 import (
 	"context"
+	"log/slog"
 	"testing"
 
 	. "github.com/onsi/gomega"
-	"golang.org/x/exp/slog"
 )
 
 func TestNewContext(t *testing.T) {
